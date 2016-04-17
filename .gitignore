@@ -1,0 +1,5 @@
+*bundle.js
+*bundle.js.map
+dist
+data/strava_config
+node_modules/
