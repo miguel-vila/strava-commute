@@ -54,7 +54,7 @@ const normalizeActivity = (activity) => {
 
 const getCommutes = (activities) =>
   lazy(activities)
-  .filter( activity => activity.commute )
+	.filter( activity => activity.commute )
   .map(normalizeActivity)
   .groupBy('date')
   .filter( activities => activities.length === 2 ) // filtrar 2 actividades por día
@@ -65,23 +65,10 @@ const getCommutes = (activities) =>
     let m2 = moment(d2, dateFormat);
     return compareMoments(m1,m2);
   }, false)
-  //.map( activities => activities.sort( (a1,a2) => -compareMoments(a1.start_date, a2.start_date)) )
-//  .sortBy('date', true)
-  /*
-  .map( (activities) => {
-    console.log('activities = ', activities);
-    return activities.sort( (a1,a2) => {
-      let duration = moment.duration(a1.start_date.diff(a2.start_date));
-      let h = duration.asHours();
-      console.log('diff = ',h)
-      return h
-    })
-  })
-  */
   .toArray()
   .map( t => {
     let date = t[0];
-    let commuteActivities = t[1];
+    let commuteActivities = t[1].sort( (a1,a2) => compareMoments(a1.start_date, a2.start_date) );
     return {date, commuteActivities};
   })
 
