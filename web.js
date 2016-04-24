@@ -18,7 +18,7 @@ function compareMoments(a,b) {
 const getToken             = promisify(strava.oauth.getToken);
 const getAthleteActivities = (access_token) => {
   let deferred = q.defer();
-  strava.athlete.listActivities({access_token, per_page: 50}, (error, activities) => {
+  strava.athlete.listActivities({access_token, per_page: 200}, (error, activities) => {
     if(error) {
       deferred.reject(error);
     } else {
@@ -27,6 +27,8 @@ const getAthleteActivities = (access_token) => {
   });
   return deferred.promise;
 }
+
+const toKmPerHour = mtPerSecond => 3.6 * mtPerSecond
 
 const normalizeActivity = (activity) => {
   let start_date = moment.parseZone(activity.start_date_local);
@@ -42,8 +44,8 @@ const normalizeActivity = (activity) => {
     start: activity.start_latlng,
     end: activity.end_latlng,
     achievement_count: activity.achievement_count,
-    average_speed: activity.average_speed,
-    max_speed: activity.max_speed,
+    average_speed: toKmPerHour( activity.average_speed ),
+    max_speed: toKmPerHour( activity.max_speed ),
     average_watts: activity.average_watts,
     kilojoules: activity.kilojoules
   };

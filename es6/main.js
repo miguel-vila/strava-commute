@@ -35,7 +35,7 @@ if(code) {
 
 function averageSpeedChart(activities) {
   // Set the dimensions of the canvas / graph
-  const margin = {top: 30, right: 80, bottom: 30, left: 50},
+  const margin = {top: 30, right: 115, bottom: 30, left: 50},
         width = 800 - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom;
 
@@ -68,7 +68,13 @@ function averageSpeedChart(activities) {
 
   // Scale the range of the data
   x.domain( d3.extent(activities, d => parseDate(d.date) ) );
-  y.domain([0, d3.max(activities, d => d.commuteActivities[0].average_speed)]);
+  y.domain([
+    Math.max(
+      d3.min(activities, d => d3.min(d.commuteActivities, a => a.average_speed)),
+      5
+    ),
+    d3.max(activities, d => d3.max(d.commuteActivities, a => a.average_speed))
+  ]);
 
   const lines = {
     "Go Commute"          : ['commuteActivities',0,'average_speed'] ,
@@ -102,7 +108,7 @@ function averageSpeedChart(activities) {
        .attr('y', 6)
        .attr('dy', '.71em')
        .style('text-anchor', 'end')
-       .text('Average Speed (Miles/Hour)');
+       .text('Average Speed (Km/H)');
 
   const averageSpeed = svg.selectAll('.average-speed')
                           .data(averageSpeedData)
