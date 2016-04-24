@@ -9,10 +9,16 @@ const q          = require('q');
 const lazy       = require('lazy.js');
 const moment     = require('moment');
 
+const dateFormat = 'DD/MM/YYYY';
+
+function compareMoments(a,b) {
+	return a - b;
+}
+
 const getToken             = promisify(strava.oauth.getToken);
 const getAthleteActivities = (access_token) => {
   let deferred = q.defer();
-  strava.athlete.listActivities({access_token, per_page: 15}, (error, activities) => {
+  strava.athlete.listActivities({access_token, per_page: 50}, (error, activities) => {
     if(error) {
       deferred.reject(error);
     } else {
@@ -25,7 +31,7 @@ const getAthleteActivities = (access_token) => {
 const normalizeActivity = (activity) => {
   let start_date = moment.parseZone(activity.start_date_local);
   let end_date = start_date.add( activity.elapsed_time, 'seconds' );
-  let date = start_date.format('DD/MM/YYYY');
+  let date = start_date.format( dateFormat );
   let normalized = {
     id: activity.id,
     distance: activity.distance,
@@ -46,10 +52,19 @@ const normalizeActivity = (activity) => {
 
 const getCommutes = (activities) =>
   lazy(activities)
-  .filter( (activity) => activity.commute )
+  .filter( activity => activity.commute )
   .map(normalizeActivity)
   .groupBy('date')
-  .filter( (activities) => activities.length === 2 ) // filtrar 2 actividades por día
+  .filter( activities => activities.length === 2 ) // filtrar 2 actividades por día
+  .sort( (t1,t2) => {
+    let d1 = t1[0];
+    let d2 = t2[0];
+    let m1 = moment(d1, dateFormat);
+    let m2 = moment(d2, dateFormat);
+    return compareMoments(m1,m2);
+  }, false)
+  //.map( activities => activities.sort( (a1,a2) => -compareMoments(a1.start_date, a2.start_date)) )
+//  .sortBy('date', true)
   /*
   .map( (activities) => {
     console.log('activities = ', activities);
@@ -62,6 +77,11 @@ const getCommutes = (activities) =>
   })
   */
   .toArray()
+  .map( t => {
+    let date = t[0];
+    let commuteActivities = t[1];
+    return {date, commuteActivities};
+  })
 
 const getAthleteAndActivities = (auth_code) =>
   getToken(auth_code).then( (response) =>
@@ -80,10 +100,11 @@ app.get('/my-commutes', (req, res) => {
        .json({ msg: 'Must send query parameter "code"' })
   } else {
     getAthleteAndActivities( code ).then( (response) => {
-      console.log(getCommutes(response.activities));
-//      console.log(response.athlete);
-    }, (err) => console.log(err));
-    res.json({ok:true});
+      let activities = getCommutes(response.activities);
+      res.json(activities);
+    }).catch( (err) => {
+      console.log(err); res.json(err)
+    });
   }
 });
 
@@ -99,6 +120,7 @@ app.get('/', (req, res) => {
 
 app.use('/dist', express.static(__dirname + '/dist'));
 app.use('/img', express.static(__dirname + '/img'));
+app.use('/css', express.static(__dirname + '/css'));
 
 var port = process.env.PORT || 5000;
 app.listen(port, () => console.log("Listening on " + port) );

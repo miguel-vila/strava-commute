@@ -17,6 +17,7 @@
   "dependencies": {
     "axios": "^0.9.1",
     "body-parser": "^1.15.0",
+    "d3": "^3.5.16",
     "es6-promisify": "^4.0.0",
     "express": "^4.13.4",
     "lazy.js": "^0.4.2",
