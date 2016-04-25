@@ -8,8 +8,8 @@ const normalizedYear = 2016;
 const normalizedMonth = 0;
 const normalizedDate = 1;
 
-const normalDate        = new Date(normalizedYear, normalizedMonth, normalizedDate),
-      normalDatePlusDay = new Date(normalizedYear, normalizedMonth, normalizedDate+1);
+const normalDate        = new Date(normalizedYear, normalizedMonth, normalizedDate , 6),
+      normalDatePlusDay = new Date(normalizedYear, normalizedMonth, normalizedDate , 21);
 
 function normalizeDate(date) {
   date.setFullYear(normalizedYear);
@@ -18,7 +18,7 @@ function normalizeDate(date) {
   return date;
 }
 
-function durationsChart(activities, element_selector) {
+function durationsChart(activities, element_id) {
   // Set the dimensions of the canvas / graph
   const margin = {top: 30, right: 115, bottom: 30, left: 50},
         width = 1200 - margin.left - margin.right,
@@ -42,13 +42,24 @@ function durationsChart(activities, element_selector) {
                       .orient("left")
                       .tickFormat(formatTime);
 
+  const yAxis2 = d3.svg.axis().scale(y)
+                      .orient("right")
+                      .tickFormat(formatTime);
+
   // Define the line
   const valueline = d3.svg.line()
+                      .interpolate('basis')
                       .x( d => x(parseDate1(d.date)) )
                       .y( d => y(normalizeDate(parseDate2(d.timeOfDay))) );
 
+  const title = document.createElement('h2');
+  title.appendChild(document.createTextNode('Commutes departura/arrival times'));
+
+  document.getElementById(element_id)
+          .appendChild(title);
+
   // Adds the svg canvas
-  const svg = d3.select(element_selector)
+  const svg = d3.select(`#${element_id}`)
                 .append('svg')
                   .attr('width', width + margin.left + margin.right)
                   .attr('height', height + margin.top + margin.bottom)
@@ -87,13 +98,12 @@ function durationsChart(activities, element_selector) {
   // Add the Y Axis
   svg.append('g')
       .attr('class', 'y axis')
-      .call(yAxis)/*
-     .append('text')
-       .attr('transform', 'rotate(-90)')
-       .attr('y', 6)
-       .attr('dy', '.71em')
-       .style('text-anchor', 'end')
-       .text('Average Speed (Km/H)');*/
+      .call(yAxis)
+
+  svg.append('g')
+     .attr('class', 'y axis')
+     .call(yAxis2)
+     .attr('transform', `translate(${width} ,0)`);
 
   const goCommute = svg.selectAll('.go-commute')
                           .data(goCommuteData)
@@ -108,7 +118,7 @@ function durationsChart(activities, element_selector) {
 /*
   goCommute.append('text')
               .datum( d => ({ name: d.name, value: d.values[d.values.length - 1] }) )
-              .attr('transform', d => `translate(${width}, ${y(d.value.average_speed)})`)
+              .attr('transform', d => `translate(${width}, ${y(normalizeDate(parseDate2(d.timeOfDay)))})`)
               .attr('x', lines.length)
               .attr('dy', '.35em')
               .text( d => d.name )

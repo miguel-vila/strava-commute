@@ -15,8 +15,8 @@ if(!code) {
   appElem.appendChild(stravaButton);
 } else {
   axios.get('my-commutes', { params : { code } } ).then( response => {
-    averageSpeedChart(response.data, '#graphs');
-    durationsChart(response.data, '#graphs');
+    averageSpeedChart(response.data, 'graphs');
+    durationsChart(response.data, 'graphs');
   },
     (err) =>
       console.log(err)

@@ -5,7 +5,7 @@ import utils from './utils';
 
 const {applyPath} = utils;
 
-function averageSpeedChart(activities, element_selector) {
+function averageSpeedChart(activities, element_id) {
   // Set the dimensions of the canvas / graph
   const margin = {top: 30, right: 115, bottom: 30, left: 50},
         width = 1200 - margin.left - margin.right,
@@ -27,11 +27,18 @@ function averageSpeedChart(activities, element_selector) {
 
   // Define the line
   const valueline = d3.svg.line()
+                      //.interpolate('basis')
                       .x( d => x(parseDate(d.date)) )
                       .y( d => y(d.average_speed) );
 
+  const title = document.createElement('h2');
+  title.appendChild(document.createTextNode('Average Speed (Km/h)'));
+
+  document.getElementById(element_id)
+          .appendChild(title);
+
   // Adds the svg canvas
-  const svg = d3.select(element_selector)
+  const svg = d3.select(`#${element_id}`)
                 .append('svg')
                   .attr('width', width + margin.left + margin.right)
                   .attr('height', height + margin.top + margin.bottom)
