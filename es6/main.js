@@ -3,6 +3,7 @@
 import axios from 'axios';
 import queryString from 'query-string';
 import averageSpeedChart from './avg-speed-chart';
+import durationsChart from './durations-chart';
 import createAuthorizeStravaButton from './strava-button';
 
 const appElem = document.getElementById('app');
@@ -14,8 +15,8 @@ if(!code) {
   appElem.appendChild(stravaButton);
 } else {
   axios.get('my-commutes', { params : { code } } ).then( response => {
-    response.data.forEach(d => console.log(d.commuteActivities[0].average_speed));
-    averageSpeedChart(response.data, '#graphs')
+    averageSpeedChart(response.data, '#graphs');
+    durationsChart(response.data, '#graphs');
   },
     (err) =>
       console.log(err)

@@ -10,6 +10,7 @@ const lazy       = require('lazy.js');
 const moment     = require('moment');
 
 const dateFormat = 'DD/MM/YYYY';
+let cachedResponse = null; //cacheo temporal para desarrollo
 
 function compareMoments(a,b) {
 	return a - b;
@@ -18,7 +19,7 @@ function compareMoments(a,b) {
 const getToken             = promisify(strava.oauth.getToken);
 const getAthleteActivities = (access_token) => {
   let deferred = q.defer();
-  strava.athlete.listActivities({access_token, per_page: 200}, (error, activities) => {
+  strava.athlete.listActivities({access_token, after: 0, per_page: 200}, (error, activities) => {
     if(error) {
       deferred.reject(error);
     } else {
@@ -32,7 +33,7 @@ const toKmPerHour = mtPerSecond => 3.6 * mtPerSecond
 
 const normalizeActivity = (activity) => {
   let start_date = moment.parseZone(activity.start_date_local);
-  let end_date = start_date.add( activity.elapsed_time, 'seconds' );
+  let end_date = start_date.clone().add( activity.elapsed_time, 'seconds' );
   let date = start_date.format( dateFormat );
   let normalized = {
     id: activity.id,
@@ -41,6 +42,7 @@ const normalizeActivity = (activity) => {
     start_date,
     end_date,
     date,
+		elapsed_time: activity.elapsed_time,
     start: activity.start_latlng,
     end: activity.end_latlng,
     achievement_count: activity.achievement_count,
@@ -84,13 +86,18 @@ app.use(bodyParser.json());
 
 app.get('/my-commutes', (req, res) => {
   var code = req.query && req.query.code;
+	if(cachedResponse) {
+		res.json(cachedResponse);
+		return;
+	}
   if(!code) {
     res.status(404)
        .json({ msg: 'Must send query parameter "code"' })
   } else {
     getAthleteAndActivities( code ).then( (response) => {
       let activities = getCommutes(response.activities);
-      res.json(activities);
+			cachedResponse = activities;
+			res.json(activities);
     }).catch( (err) => {
       console.log(err); res.json(err)
     });
