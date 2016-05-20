@@ -40,6 +40,7 @@ function durationsChart(activities, element_id) {
 
   const yAxis = d3.svg.axis().scale(y)
                       .orient("left")
+                      .tickSize(-height, 0, 0)
                       .tickFormat(formatTime);
 
   const yAxis2 = d3.svg.axis().scale(y)
